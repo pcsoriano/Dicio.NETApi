@@ -7,13 +7,45 @@ namespace DicioAPITest
     public class DicioTest
     {
         [TestMethod]
-        public async void MeaningTest()
+        public void MeaningTest()
+        {
+            var dicio = new Dicio();            
+
+            var meaning = dicio.SearchMeaningAsync("teste").Result;
+
+            Assert.IsNotNull(meaning);
+        }
+
+        [TestMethod]
+        public void MeaningsTest()
         {
             var dicio = new Dicio();
 
-            var meaning = await dicio.Meaning("teste");
+            var meaning = dicio.SearchMeaningsAsync("teste").Result;
 
             Assert.IsNotNull(meaning);
+        }
+
+        [TestMethod]
+        public void SynonymsTest()
+        {
+            var dicio = new Dicio();
+
+            var synonyms = dicio.SearchSynonymsAsync("teste");
+
+            Assert.IsNotNull(synonyms);
+        }
+
+        [TestMethod]
+        public void SearchResultTest()
+        {
+            var dicio = new Dicio();
+
+            dicio.SearchAsync("teste");
+
+            Assert.IsNotNull(dicio.SearchResult.Meaning);
+            Assert.IsNotNull(dicio.SearchResult.Meanings);
+            Assert.IsNotNull(dicio.SearchResult.Synonyms);
         }
     }
 }

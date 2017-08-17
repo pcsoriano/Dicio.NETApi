@@ -10,22 +10,34 @@ namespace DicioAPI
     {
         private const string DICIO_URL = "https://www.dicio.com.br/";
         private HtmlWeb _htmlWeb;
+        public SearchResult SearchResult { get; private set; }
 
         public Dicio()
         {
             _htmlWeb = new HtmlWeb();
-
+            SearchResult = new SearchResult();
         }
 
-        public async Task<string> Meaning(string word, string separator = null)
+        public async Task SearchAsync(string word)
         {
-            return string.Join(separator ?? " ", await Meanings(word));
+            SearchResult.Word = word ?? throw new ArgumentNullException("word", "Informe a palavra para ser buscada.");
+
+            var meanings = await SearchMeaningsAsync(word);
+
+            SearchResult.Meaning = string.Join(" ", meanings);
+
+            SearchResult.Synonyms = await SearchSynonymsAsync(word);
         }
 
-        public async Task<List<string>> Meanings(string word)
+        public async Task<string> SearchMeaningAsync(string word, string separator = null)
+        {
+            return string.Join(separator ?? " ", await SearchMeaningsAsync(word));
+        }
+
+        public async Task<List<string>> SearchMeaningsAsync(string word)
         {
             if (word == null)
-                throw new ArgumentNullException("word", "Search word must be informed.");
+                throw new ArgumentNullException("word", "Informe a palavra para ser buscada.");
 
             HtmlDocument htmlDocument;
 
@@ -35,7 +47,7 @@ namespace DicioAPI
             }
             catch (Exception e)
             {
-                throw new Exception("Nothing found. Verify if the search term is correct.", e);
+                throw new Exception("Termo não encontrado. Verifique se a palavra buscada está correta.", e);
             }
 
             var meaningsHtml = htmlDocument.DocumentNode.Descendants("p")
@@ -43,7 +55,7 @@ namespace DicioAPI
                 .FirstOrDefault();
 
             if (meaningsHtml is null)
-                throw new Exception("Nothing found. Verify if the search term is correct.");
+                throw new Exception("Termo não encontrado. Verifique se a palavra buscada está correta.");
 
             var meanings = meaningsHtml
                 .Descendants("span")
@@ -52,10 +64,10 @@ namespace DicioAPI
             return meanings.ToList();
         }
 
-        public async Task<List<string>> Synonyms(string word)
+        public async Task<List<string>> SearchSynonymsAsync(string word)
         {
             if (word == null)
-                throw new ArgumentNullException("word", "Search word must be informed.");
+                throw new ArgumentNullException("word", "Informe a palavra para ser buscada.");
 
             HtmlDocument htmlDocument = null;
 
@@ -65,8 +77,8 @@ namespace DicioAPI
             }
             catch (Exception e)
             {
-                throw new Exception("Nothing found. Verify if the search term is correct.", e);
-            }            
+                throw new Exception("Termo não encontrado. Verifique se a palavra buscada está correta.", e);
+            }
 
             var synonymsHtml = htmlDocument.DocumentNode.Descendants("p")
                 .Where(a => a.Attributes.Contains("class") && a.Attributes["class"].Value.Equals("adicional sinonimos"))
